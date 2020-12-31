@@ -1,7 +1,7 @@
 #  generative metaprogramming
 ## universal code templating
 
-Copyright (c) 2020 Dmitry Ponyatov <dponyatov@gmail.com> MIT License
+Copyright (c) 2020 Dmitry Ponyatov <<dponyatov@gmail.com>> MIT License
 
 github: https://github.com/ponyatov/gen
 

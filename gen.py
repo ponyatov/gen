@@ -20,7 +20,10 @@ class Object:
         return ret
 
 class Primitive(Object): pass
-class S(Primitive): pass
+
+class S(Primitive):
+    def gen(self,depth=0,to=None):
+        return f'{self.value}'
 
 class Meta(Object): pass
 class Module(Meta): pass
@@ -28,10 +31,13 @@ class Module(Meta): pass
 class Section(Meta):
     def gen(self,depth=0,to=None):
         assert isinstance(to,File)
-        ret = f'{to.comment} \\ {self}\n'
+        ret = ''
+        if self.nest:
+            ret += f'{to.comment} \\ {self}\n'
         for j in self.nest:
-            ret += f'{j.gen(to)}'
-        ret += f'{to.comment} / {self}\n'
+            ret += f'{j.gen(to)}\n'
+        if self.nest:
+            ret += f'{to.comment} / {self}\n'
         return ret
 
 class IO(Object): pass
@@ -49,12 +55,13 @@ class File(IO):
         print(f'{self} {self.path}')
         with open(self.path,'w') as F:
             for j in self.nest:
-                F.write(f'{j.gen(to=self)}')
+                t = f'{j.gen(to=self)}'
+                if t: F.write(f'{t}\n')
 
 class gitiFile(File):
     def __init__(self,V='.gitignore',comment='#'):
         super().__init__(V,comment)
-        self // f'!{self}'
+        self // f'!{self.value}'
 
 class Dir(IO):
     def __init__(self,V):
@@ -95,10 +102,18 @@ class dirModule(Module):
         self.d.gen(to=self)
 
     def init_giti(self):
-        self.d.giti.top // '*~'
+        self.d.giti.top // '*~' // '*.log' // '*.log'
 
     def init_mk(self):
         self.d.mk = mkFile() ; self.d // self.d.mk
+        self.d.mk.var = Section('var') ; self.d.mk // self.d.mk.var
+        self.d.mk.var //\
+            f'{"MODULE":<7}  = $(notdir $(CURDIR))' //\
+            f'{"NOW":<7}  = $(shell date +%d%m%y)' //\
+            f'{"REL":<7}  = $(shell git rev-parse --short=4 HEAD)'
+        self.d.mk.tool = Section('tool') ; self.d.mk // self.d.mk.tool
+        self.d.mk.tool //\
+            f'{"WGET":<7}  = wget -c'
 
     def init_vscode(self):
         self.d.vscode = Dir('.vscode') ; self.d // self.d.vscode
@@ -109,7 +124,12 @@ class pyModule(dirModule):
         self.init_py()
     def init_py(self):
         pass
+    def init_mk(self):
+        super().init_mk()
+        self.d.mk.tool //\
+            f'{"PY":<7}  = $(shell which python3)'
 
-mod = pyModule()
-
-mod.gen()
+if __name__ == '__main__':
+    if sys.argv[-1] == 'all':
+        mod = pyModule()
+        mod.gen()

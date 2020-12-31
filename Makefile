@@ -1,11 +1,16 @@
-MODULE = $(notdir $(CURDIR))
-NOW    = $(shell date +%d%m%y)
-REL    = $(shell git rev-parse --short=4 HEAD)
+# \ <section:var>
+MODULE   = $(notdir $(CURDIR))
+NOW      = $(shell date +%d%m%y)
+REL      = $(shell git rev-parse --short=4 HEAD)
+# / <section:var>
 
-PY = $(shell which python3)
+# \ <section:tool>
+WGET     = wget -c
+PY       = $(shell which python3)
+# / <section:tool>
 
 all: $(PY) $(MODULE).py
-	$^
+	$^ $@
 
 MERGE  = Makefile LICENSE README.md .gitignore .vscode
 MERGE += $(MODULE).py
